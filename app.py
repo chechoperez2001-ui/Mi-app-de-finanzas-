@@ -3,7 +3,7 @@ import streamlit as str
 # Configuración de la pestaña del navegador
 str.set_page_config(page_title="Mi App de Finanzas", page_icon="💰", layout="centered")
 
-# --- PORTADA DE LA APLICACIÓN (Nueva sección visual) ---
+# --- PORTADA DE LA APLICACIÓN ---
 str.markdown(
     """
     <div style="background-color:#2C3E50; padding:20px; border-radius:15px; text-align:center; margin-bottom:25px;">
@@ -23,13 +23,11 @@ str.header("💵 1. Ingresos y Ahorro")
 col1, col2 = str.columns(2)
 
 with col1:
-    # Corrección para que sea visualmente claro con separador de miles en el sistema
     ingresos = str.number_input(
         "Ingresa tus Ingresos Mensuales ($ COP):", 
         min_value=0, 
         value=2000000, 
-        step=50000,
-        format="%d"
+        step=50000
     )
 
 with col2:
@@ -44,9 +42,9 @@ with col2:
 monto_ahorro = ingresos * (porcentaje_ahorro / 100)
 ingreso_disponible = ingresos - monto_ahorro
 
-# Tarjetas informativas con los puntos de miles formateados para Colombia
-str.info(f"**Ahorro Protegido:** ${monto_ahorro:,.0f} COP (Guardado automáticamente)")
-str.success(f"**Presupuesto Neto para Gastos:** ${ingreso_disponible:,.0f} COP")
+# Forzamos los puntos de miles en las etiquetas informativas intermedias
+str.info(f"**Ahorro Protegido:** ${monto_ahorro:,.0f} COP".replace(",", "."))
+str.success(f"**Presupuesto Neto para Gastos:** ${ingreso_disponible:,.0f} COP".replace(",", "."))
 str.divider()
 
 # --- SECCIÓN 2: REGISTRO DE GASTOS MENSUALES ---
@@ -56,15 +54,28 @@ str.caption("Introduce el valor de cada gasto (utiliza los botones + / - o escri
 col_g1, col_g2 = str.columns(2)
 
 with col_g1:
-    g_arriendo = str.number_input("Valor de Arriendo ($):", min_value=0, value=600000, step=10000, format="%d")
-    g_agua = str.number_input("Valor de Agua ($):", min_value=0, value=40000, step=5000, format="%d")
-    g_luz = str.number_input("Valor de Luz ($):", min_value=0, value=70000, step=5000, format="%d")
-    g_gas = str.number_input("Valor de Gas ($):", min_value=0, value=15000, step=2000, format="%d")
+    g_arriendo = str.number_input("Valor de Arriendo ($):", min_value=0, value=600000, step=10000)
+    # Mostramos un texto de ayuda justo abajo de la caja con el número formateado con puntos para que tu mamá no se confunda
+    str.caption(f"Confirmado: **${g_arriendo:,.0f}** COP".replace(",", "."))
+    
+    g_agua = str.number_input("Valor de Agua ($):", min_value=0, value=40000, step=5000)
+    str.caption(f"Confirmado: **${g_agua:,.0f}** COP".replace(",", "."))
+    
+    g_luz = str.number_input("Valor de Luz ($):", min_value=0, value=70000, step=5000)
+    str.caption(f"Confirmado: **${g_luz:,.0f}** COP".replace(",", "."))
+    
+    g_gas = str.number_input("Valor de Gas ($):", min_value=0, value=15000, step=2000)
+    str.caption(f"Confirmado: **${g_gas:,.0f}** COP".replace(",", "."))
 
 with col_g2:
-    g_internet = str.number_input("Valor de Internet ($):", min_value=0, value=80000, step=5000, format="%d")
-    g_mercado = str.number_input("Valor de Mercado ($):", min_value=0, value=400000, step=10000, format="%d")
-    g_transporte = str.number_input("Valor de Transporte ($):", min_value=0, value=150000, step=5000, format="%d")
+    g_internet = str.number_input("Valor de Internet ($):", min_value=0, value=80000, step=5000)
+    str.caption(f"Confirmado: **${g_internet:,.0f}** COP".replace(",", "."))
+    
+    g_mercado = str.number_input("Valor de Mercado ($):", min_value=0, value=400000, step=10000)
+    str.caption(f"Confirmado: **${g_mercado:,.0f}** COP".replace(",", "."))
+    
+    g_transporte = str.number_input("Valor de Transporte ($):", min_value=0, value=150000, step=5000)
+    str.caption(f"Confirmado: **${g_transporte:,.0f}** COP".replace(",", "."))
 
 str.divider()
 
@@ -77,23 +88,22 @@ saldo_final = ingreso_disponible - total_gastos
 def calcular_pct(gasto):
     return (gasto / ingresos) * 100 if ingresos > 0 else 0
 
-# Mostrar tarjetas visuales con los totales finales formateados con puntos
-c_ing, c_gas, c_sal = str.columns(3)
-c_ing.metric(label="Ingresos Totales", value=f"${ingresos:,.0f} COP")
-c_gas.metric(label="Total Gastos del Mes", value=f"${total_gastos:,.0f} COP")
+# Formateamos los números finales del Dashboard con puntos estrictos para Colombia usando .replace(",", ".")
+str.metric(label="Ingresos Totales", value=f"${ingresos:,.0f} COP".replace(",", "."))
+str.metric(label="Total Gastos del Mes", value=f"${total_gastos:,.0f} COP".replace(",", "."))
 
 if saldo_final < 0:
-    c_sal.metric(label="Saldo Libre Final", value=f"${saldo_final:,.0f} COP", delta="DÉFICIT", delta_color="inverse")
-    str.error(f"⚠️ **¡Alerta de Deuda!** Has superado tu presupuesto disponible por ${abs(saldo_final):,.0f} COP.")
+    str.metric(label="Saldo Libre Final", value=f"${saldo_final:,.0f} COP".replace(",", "."), delta="DÉFICIT", delta_color="inverse")
+    str.error(f"⚠️ **¡Alerta de Deuda!** Has superado tu presupuesto disponible por ${abs(saldo_final):,.0f} COP.".replace(",", "."))
 else:
-    c_sal.metric(label="Saldo Libre Final", value=f"${saldo_final:,.0f} COP", delta="ESTABLE")
-    str.balloons() # ¡Efecto visual de celebración si las cuentas van bien!
+    str.metric(label="Saldo Libre Final", value=f"${saldo_final:,.0f} COP".replace(",", "."), delta="ESTABLE")
+    str.balloons() # ¡Efecto de globos!
     str.success("✅ **¡Éxito!** Tus finanzas están bajo control. Cuentas pagas y ahorros asegurados.")
 
 # Mostrar el desglose de impacto en la web
 with str.expander("🔍 Ver impacto detallado de cada gasto en tus ingresos"):
-    str.write(f"• **Arriendo:** ${g_arriendo:,.0f} COP ({calcular_pct(g_arriendo):.1f}%)")
-    str.write(f"• **Mercado:** ${g_mercado:,.0f} COP ({calcular_pct(g_mercado):.1f}%)")
-    str.write(f"• **Transporte:** ${g_transporte:,.0f} COP ({calcular_pct(g_transporte):.1f}%)")
+    str.write(f"• **Arriendo:** ${g_arriendo:,.0f} COP ({calcular_pct(g_arriendo):.1f}%)".replace(",", "."))
+    str.write(f"• **Mercado:** ${g_mercado:,.0f} COP ({calcular_pct(g_mercado):.1f}%)".replace(",", "."))
+    str.write(f"• **Transporte:** ${g_transporte:,.0f} COP ({calcular_pct(g_transporte):.1f}%)".replace(",", "."))
     servicios_totales = g_agua + g_luz + g_gas + g_internet
-    str.write(f"• **Servicios Públicos (Agua/Luz/Gas/Net):** ${servicios_totales:,.0f} COP ({calcular_pct(servicios_totales):.1f}%)")
+    str.write(f"• **Servicios Públicos (Agua/Luz/Gas/Net):** ${servicios_totales:,.0f} COP ({calcular_pct(servicios_totales):.1f}%)".replace(",", "."))
